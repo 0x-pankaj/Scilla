@@ -3,20 +3,22 @@ use {
         commands::CommandExec, constants::LAMPORTS_PER_SOL, context::ScillaContext,
         error::ScillaResult, ui::show_spinner,
     },
-    comfy_table::{Cell, Table, presets::UTF8_FULL},
-    console::style,
-    std::ops::Div,
+    ::{
+        comfy_table::{Cell, Table, presets::UTF8_FULL},
+        console::style,
+        std::ops::Div,
+    },
 };
 
 /// Commands related to cluster operations
 #[derive(Debug, Clone)]
 pub enum ClusterCommand {
-    Epoch,
-    Slot,
+    EpochInfo,
+    CurrentSlot,
     BlockHeight,
     BlockTime,
     Validators,
-    Supply,
+    SupplyInfo,
     Inflation,
     ClusterVersion,
     GoBack,
@@ -25,14 +27,14 @@ pub enum ClusterCommand {
 impl ClusterCommand {
     pub fn description(&self) -> &'static str {
         match self {
-            ClusterCommand::Epoch => "Get Epoch Info",
-            ClusterCommand::Slot => "Get Current Slot",
-            ClusterCommand::BlockHeight => "Get Block Height",
-            ClusterCommand::BlockTime => "Get Block Time",
-            ClusterCommand::Validators => "Get Validators",
-            ClusterCommand::Supply => "Get Supply Info",
-            ClusterCommand::Inflation => "Get Inflation Info",
-            ClusterCommand::ClusterVersion => "Get Cluster Version",
+            ClusterCommand::EpochInfo => "Current epoch and progress",
+            ClusterCommand::CurrentSlot => "Latest confirmed slot",
+            ClusterCommand::BlockHeight => "Current block height",
+            ClusterCommand::BlockTime => "Timestamp for a specific block",
+            ClusterCommand::Validators => "List active validators",
+            ClusterCommand::ClusterVersion => "Solana version running on cluster",
+            ClusterCommand::SupplyInfo => "Total and circulating supply",
+            ClusterCommand::Inflation => "Current inflation parameters",
             ClusterCommand::GoBack => "Go back",
         }
     }
@@ -41,10 +43,10 @@ impl ClusterCommand {
 impl ClusterCommand {
     pub async fn process_command(&self, ctx: &ScillaContext) -> ScillaResult<()> {
         match self {
-            ClusterCommand::Epoch => {
+            ClusterCommand::EpochInfo => {
                 show_spinner(self.description(), fetch_epoch_info(ctx)).await?;
             }
-            ClusterCommand::Slot => {
+            ClusterCommand::CurrentSlot => {
                 show_spinner(self.description(), fetch_current_slot(ctx)).await?;
             }
             ClusterCommand::BlockHeight => {
@@ -56,7 +58,7 @@ impl ClusterCommand {
             ClusterCommand::Validators => {
                 show_spinner(self.description(), fetch_validators(ctx)).await?;
             }
-            ClusterCommand::Supply => {
+            ClusterCommand::SupplyInfo => {
                 show_spinner(self.description(), fetch_supply_info(ctx)).await?;
             }
             ClusterCommand::Inflation => {
@@ -68,7 +70,7 @@ impl ClusterCommand {
             ClusterCommand::GoBack => {
                 return Ok(CommandExec::GoBack);
             }
-        };
+        }
 
         Ok(CommandExec::Process(()))
     }
@@ -110,7 +112,7 @@ async fn fetch_epoch_info(ctx: &ScillaContext) -> anyhow::Result<()> {
         ]);
 
     println!("\n{}", style("EPOCH INFORMATION").green().bold());
-    println!("{}", table);
+    println!("{table}");
 
     Ok(())
 }
@@ -127,11 +129,11 @@ async fn fetch_current_slot(ctx: &ScillaContext) -> anyhow::Result<()> {
         ])
         .add_row(vec![
             Cell::new("Current Slot"),
-            Cell::new(format!("{}", slot)),
+            Cell::new(format!("{slot}")),
         ]);
 
     println!("\n{}", style("CURRENT SLOT").green().bold());
-    println!("{}", table);
+    println!("{table}");
 
     Ok(())
 }
@@ -148,11 +150,11 @@ async fn fetch_block_height(ctx: &ScillaContext) -> anyhow::Result<()> {
         ])
         .add_row(vec![
             Cell::new("Block Height"),
-            Cell::new(format!("{}", block_height)),
+            Cell::new(format!("{block_height}")),
         ]);
 
     println!("\n{}", style("BLOCK HEIGHT").green().bold());
-    println!("{}", table);
+    println!("{table}");
 
     Ok(())
 }
@@ -172,15 +174,15 @@ async fn fetch_block_time(ctx: &ScillaContext) -> anyhow::Result<()> {
             Cell::new("Field").add_attribute(comfy_table::Attribute::Bold),
             Cell::new("Value").add_attribute(comfy_table::Attribute::Bold),
         ])
-        .add_row(vec![Cell::new("Slot"), Cell::new(format!("{}", slot))])
+        .add_row(vec![Cell::new("Slot"), Cell::new(format!("{slot}"))])
         .add_row(vec![
             Cell::new("Unix Timestamp"),
-            Cell::new(format!("{}", block_time)),
+            Cell::new(format!("{block_time}")),
         ])
         .add_row(vec![Cell::new("Date/Time"), Cell::new(datetime)]);
 
     println!("\n{}", style("BLOCK TIME").green().bold());
-    println!("{}", table);
+    println!("{table}");
 
     Ok(())
 }
@@ -206,7 +208,7 @@ async fn fetch_validators(ctx: &ScillaContext) -> anyhow::Result<()> {
         ]);
 
     println!("\n{}", style("VALIDATORS SUMMARY").green().bold());
-    println!("{}", summary_table);
+    println!("{summary_table}");
 
     // Validators detail table
     if !validators.current.is_empty() {
@@ -224,12 +226,12 @@ async fn fetch_validators(ctx: &ScillaContext) -> anyhow::Result<()> {
                 Cell::new(format!("{}", idx + 1)),
                 Cell::new(validator.node_pubkey.clone()),
                 Cell::new(validator.vote_pubkey.clone()),
-                Cell::new(format!("{:.2}", stake_sol)),
+                Cell::new(format!("{stake_sol:.2}")),
             ]);
         }
 
         println!("\n{}", style("TOP VALIDATORS").green().bold());
-        println!("{}", validators_table);
+        println!("{validators_table}");
     }
 
     Ok(())
@@ -253,22 +255,22 @@ async fn fetch_supply_info(ctx: &ScillaContext) -> anyhow::Result<()> {
         ])
         .add_row(vec![
             Cell::new("Total Supply"),
-            Cell::new(format!("{:.2}", total_sol)),
+            Cell::new(format!("{total_sol:.2}")),
             Cell::new("100.00%"),
         ])
         .add_row(vec![
             Cell::new("Circulating"),
-            Cell::new(format!("{:.2}", circulating_sol)),
-            Cell::new(format!("{:.2}%", circulating_pct)),
+            Cell::new(format!("{circulating_sol:.2}")),
+            Cell::new(format!("{circulating_pct:.2}%")),
         ])
         .add_row(vec![
             Cell::new("Non-Circulating"),
-            Cell::new(format!("{:.2}", non_circulating_sol)),
+            Cell::new(format!("{non_circulating_sol:.2}")),
             Cell::new(format!("{:.2}%", 100.0 - circulating_pct)),
         ]);
 
     println!("\n{}", style("SUPPLY INFORMATION").green().bold());
-    println!("{}", table);
+    println!("{table}");
 
     Ok(())
 }
@@ -300,7 +302,7 @@ async fn fetch_inflation_info(ctx: &ScillaContext) -> anyhow::Result<()> {
         ]);
 
     println!("\n{}", style("INFLATION INFORMATION").green().bold());
-    println!("{}", table);
+    println!("{table}");
 
     Ok(())
 }
@@ -323,12 +325,12 @@ async fn fetch_cluster_version(ctx: &ScillaContext) -> anyhow::Result<()> {
     if let Some(feature_set) = version.feature_set {
         table.add_row(vec![
             Cell::new("Feature Set"),
-            Cell::new(format!("{}", feature_set)),
+            Cell::new(format!("{feature_set}")),
         ]);
     }
 
     println!("\n{}", style("CLUSTER VERSION").green().bold());
-    println!("{}", table);
+    println!("{table}");
 
     Ok(())
 }
