@@ -105,3 +105,80 @@ impl ScillaConfig {
         Ok(config)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::env;
+    use tempfile::TempDir;
+
+    #[test]
+    fn test_expand_tilde_with_home_prefix() {
+        let Some(home) = env::home_dir() else {
+            eprintln!("Skipping: HOME not set");
+            return;
+        };
+        let result = expand_tilde("~/foo/bar");
+        let expected = home.join("foo/bar");
+        assert_eq!(result, expected, "~/foo/bar should expand to $HOME/foo/bar");
+    }
+
+    #[test]
+    fn test_load_from_path_missing_file() {
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+        let nonexistent = temp_dir.path().join("missing.toml");
+
+        let result = ScillaConfig::load_from_path(&nonexistent);
+
+        assert!(matches!(result, Err(ScillaError::ConfigPathDoesntExists)));
+    }
+
+    #[test]
+    fn test_load_from_path_malformed_toml() {
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+        let config_path = temp_dir.path().join("bad.toml");
+
+        // Missing closing quote - invalid TOML
+        fs::write(
+            &config_path,
+            r#"rpc-url = "https://api.mainnet-beta.solana.com"#,
+        )
+        .expect("Failed to write file");
+
+        let result = ScillaConfig::load_from_path(&config_path);
+
+        assert!(matches!(result, Err(ScillaError::TomlParseError(_))));
+    }
+
+    #[test]
+    fn test_load_from_path_valid_config_with_tilde_expansion() {
+        let Some(home) = env::home_dir() else {
+            eprintln!("Skipping: HOME not set");
+            return;
+        };
+
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+        let config_path = temp_dir.path().join("config.toml");
+
+        fs::write(
+            &config_path,
+            r#"
+rpc-url = "https://api.mainnet-beta.solana.com"
+keypair-path = "~/my/key.json"
+commitment-level = "confirmed"
+"#,
+        )
+        .expect("Failed to write file");
+
+        let config = ScillaConfig::load_from_path(&config_path)
+            .expect("Valid config should load successfully");
+
+        assert_eq!(config.rpc_url, "https://api.mainnet-beta.solana.com");
+        assert_eq!(config.commitment_level, CommitmentLevel::Confirmed);
+        assert_eq!(config.keypair_path, home.join("my/key.json"));
+        assert!(
+            !config.keypair_path.to_string_lossy().contains('~'),
+            "Tilde should be expanded in keypair_path"
+        );
+    }
+}
