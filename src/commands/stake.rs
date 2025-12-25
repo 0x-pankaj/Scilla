@@ -103,7 +103,8 @@ impl StakeCommand {
                     prompt_data("Enter Stake Account Pubkey: ")?;
                 let source_stake_account_pubkey: Pubkey =
                     prompt_data("Enter Source Stake Account Pubkey: ")?;
-                let stake_authority_keypair_path: PathBuf = prompt_data("Enter Stake Authority Keypair Path: ")?;
+                let stake_authority_keypair_path: PathBuf =
+                    prompt_data("Enter Stake Authority Keypair Path: ")?;
 
                 show_spinner(
                     self.spinner_msg(),
@@ -111,7 +112,7 @@ impl StakeCommand {
                         ctx,
                         &destination_stake_account_pubkey,
                         &source_stake_account_pubkey,
-                        &stake_authority_keypair_path
+                        &stake_authority_keypair_path,
                     ),
                 )
                 .await?;
@@ -120,7 +121,8 @@ impl StakeCommand {
                 let stake_account_pubkey: Pubkey = prompt_data("Enter Stake Account Pubkey: ")?;
                 let split_stake_account_pubkey: Pubkey =
                     prompt_data("Enter Split Stake Account Pubkey: ")?;
-                let stake_authority_keypair_path: PathBuf = prompt_data("Enter Stake Authority Keypair Path: ")?;
+                let stake_authority_keypair_path: PathBuf =
+                    prompt_data("Enter Stake Authority Keypair Path: ")?;
                 let amount_to_split: f64 = prompt_data("Enter Stake Amount (SOL) to Split: ")?;
 
                 show_spinner(
@@ -297,7 +299,7 @@ async fn process_merge_stake(
     stake_authority_keypair_path: &PathBuf,
 ) -> anyhow::Result<()> {
     let stake_authority_keypair = read_keypair_from_path(stake_authority_keypair_path)?;
-    
+
     // checks for unique pubkeys
     if destination_stake_account_pubkey == source_stake_account_pubkey {
         bail!(
@@ -383,12 +385,13 @@ async fn process_merge_stake(
     let stake_authority_pubkey = stake_authority_keypair.pubkey();
 
     let ixs = merge(
-        &destination_stake_account_pubkey,
-        &source_stake_account_pubkey,
+        destination_stake_account_pubkey,
+        source_stake_account_pubkey,
         &stake_authority_pubkey,
     );
 
-    let signature = build_and_send_tx(ctx, &ixs, &[ctx.keypair(), &stake_authority_keypair]).await?;
+    let signature =
+        build_and_send_tx(ctx, &ixs, &[ctx.keypair(), &stake_authority_keypair]).await?;
 
     println!(
         "{}\n{}\n{}\n{}\n{}\n{}",
@@ -448,7 +451,7 @@ async fn process_split_stake(
         stake_account_pubkey,
         &stake_authority_pubkey,
         lamports,
-        &split_stake_account_pubkey,
+        split_stake_account_pubkey,
     );
 
     let signature = build_and_send_tx(ctx, &ix, &[ctx.keypair(), &stake_authority_keypair]).await?;
@@ -456,11 +459,7 @@ async fn process_split_stake(
     println!(
         "{}\n{}\n{}\n{}\n{}",
         style("Split Stake successfully!").yellow().bold(),
-        style(format!(
-            "Stake Account: {}",
-            stake_account_pubkey
-        ))
-        .yellow(),
+        style(format!("Stake Account: {}", stake_account_pubkey)).yellow(),
         style(format!(
             "Split Stake Account: {}",
             split_stake_account_pubkey
