@@ -154,6 +154,44 @@ Manage Scilla's configuration settings.
 | **Edit ScillaConfig**     | Open config file in default editor | Done   |
 | **Show ScillaConfig**     | Display current config settings    | Done   |
 
+## Roadmap
+
+Scilla is under active development. Here's what we're working towards:
+
+### V1 — Full Solana CLI Compatibility
+
+The goal for V1 is to provide interactive equivalents for all core Solana CLI commands. This includes completing the remaining commands marked as "Todo" in the tables above:
+
+- Account: Transfer
+- Stake: Create, Delegate, Show
+- Full parity with `solana` CLI functionality
+
+### V2 — Extended Ecosystem Features
+
+Once V1 is stable, we'll expand Scilla's capabilities to include:
+
+- SPL Token operations (create, mint, transfer, burn)
+- Local validator management (spin up, configure, manage test validators)
+- Token metadata and NFT utilities
+- Enhanced transaction building and simulation
+
+---
+
+## Contributing
+
+We welcome contributions from the community! Before you start:
+
+1. **Check existing [Issues](../../issues) and [Pull Requests](../../pulls)** — Avoid duplicate work by seeing if someone is already working on your idea.
+2. **Open an issue first** — For new features, discuss your proposal before submitting a PR.
+3. **Follow the project timeline** — Check the status columns in the command tables above. PRs for features not on the current roadmap may be deferred.
+
+Please read our **[Contributing Guide](./CONTRIBUTING.md)** for detailed information on:
+
+- Development setup and workflow
+- Pull request guidelines
+- Coding standards and commit conventions
+
+---
 
 ## License
 
