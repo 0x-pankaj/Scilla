@@ -430,8 +430,8 @@ async fn process_fetch_vote_account(
     table
         .load_preset(UTF8_FULL)
         .set_header(vec![
-            Cell::new("Field").add_attribute(comfy_table::Attribute::Bold),
-            Cell::new("Value").add_attribute(comfy_table::Attribute::Bold),
+            Cell::new("Field").add_attribute(comfy_table::Attribute::Bold).fg(comfy_table::Color::Cyan),
+            Cell::new("Value").add_attribute(comfy_table::Attribute::Bold).fg(comfy_table::Color::Cyan),
         ])
         .add_row(vec![
             Cell::new("Account Balance"),

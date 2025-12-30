@@ -122,8 +122,8 @@ async fn process_check_confirmation(
     table
         .load_preset(UTF8_FULL)
         .set_header(vec![
-            Cell::new("Field").add_attribute(comfy_table::Attribute::Bold),
-            Cell::new("Value").add_attribute(comfy_table::Attribute::Bold),
+            Cell::new("Field").add_attribute(comfy_table::Attribute::Bold).fg(comfy_table::Color::Cyan),
+            Cell::new("Value").add_attribute(comfy_table::Attribute::Bold).fg(comfy_table::Color::Cyan),
         ])
         .add_row(vec![Cell::new("Signature"), Cell::new(signature)])
         .add_row(vec![Cell::new("Status"), Cell::new(status_styled)]);
@@ -148,8 +148,8 @@ async fn process_fetch_transaction_status(
     table
         .load_preset(UTF8_FULL)
         .set_header(vec![
-            Cell::new("Field").add_attribute(comfy_table::Attribute::Bold),
-            Cell::new("Value").add_attribute(comfy_table::Attribute::Bold),
+            Cell::new("Field").add_attribute(comfy_table::Attribute::Bold).fg(comfy_table::Color::Cyan),
+            Cell::new("Value").add_attribute(comfy_table::Attribute::Bold).fg(comfy_table::Color::Cyan),
         ])
         .add_row(vec![Cell::new("Signature"), Cell::new(signature)])
         .add_row(vec![Cell::new("Slot"), Cell::new(tx_status.slot)])
@@ -190,8 +190,8 @@ async fn process_fetch_transaction(
     table
         .load_preset(UTF8_FULL)
         .set_header(vec![
-            Cell::new("Field").add_attribute(comfy_table::Attribute::Bold),
-            Cell::new("Value").add_attribute(comfy_table::Attribute::Bold),
+            Cell::new("Field").add_attribute(comfy_table::Attribute::Bold).fg(comfy_table::Color::Cyan),
+            Cell::new("Value").add_attribute(comfy_table::Attribute::Bold).fg(comfy_table::Color::Cyan),
         ])
         .add_row(vec![Cell::new("Signature"), Cell::new(signature)])
         .add_row(vec![Cell::new("Slot"), Cell::new(tx.slot)]);
@@ -227,8 +227,8 @@ async fn process_fetch_transaction(
             msg_table
                 .load_preset(UTF8_FULL)
                 .set_header(vec![
-                    Cell::new("Field").add_attribute(comfy_table::Attribute::Bold),
-                    Cell::new("Value").add_attribute(comfy_table::Attribute::Bold),
+                    Cell::new("Field").add_attribute(comfy_table::Attribute::Bold).fg(comfy_table::Color::Cyan),
+                    Cell::new("Value").add_attribute(comfy_table::Attribute::Bold).fg(comfy_table::Color::Cyan),
                 ])
                 .add_row(vec![
                     Cell::new("Account Keys"),
@@ -245,10 +245,10 @@ async fn process_fetch_transaction(
                 println!("\n{}", style("ACCOUNT KEYS").cyan().bold());
                 let mut accounts_table = Table::new();
                 accounts_table.load_preset(UTF8_FULL).set_header(vec![
-                    Cell::new("Index").add_attribute(comfy_table::Attribute::Bold),
-                    Cell::new("Pubkey").add_attribute(comfy_table::Attribute::Bold),
-                    Cell::new("Signer").add_attribute(comfy_table::Attribute::Bold),
-                    Cell::new("Writable").add_attribute(comfy_table::Attribute::Bold),
+                    Cell::new("Index").add_attribute(comfy_table::Attribute::Bold).fg(comfy_table::Color::Cyan),
+                    Cell::new("Pubkey").add_attribute(comfy_table::Attribute::Bold).fg(comfy_table::Color::Cyan),
+                    Cell::new("Signer").add_attribute(comfy_table::Attribute::Bold).fg(comfy_table::Color::Cyan),
+                    Cell::new("Writable").add_attribute(comfy_table::Attribute::Bold).fg(comfy_table::Color::Cyan),
                 ]);
 
                 for (idx, account) in parsed_msg.account_keys.iter().enumerate() {
@@ -269,8 +269,8 @@ async fn process_fetch_transaction(
             msg_table
                 .load_preset(UTF8_FULL)
                 .set_header(vec![
-                    Cell::new("Field").add_attribute(comfy_table::Attribute::Bold),
-                    Cell::new("Value").add_attribute(comfy_table::Attribute::Bold),
+                    Cell::new("Field").add_attribute(comfy_table::Attribute::Bold).fg(comfy_table::Color::Cyan),
+                    Cell::new("Value").add_attribute(comfy_table::Attribute::Bold).fg(comfy_table::Color::Cyan),
                 ])
                 .add_row(vec![
                     Cell::new("Account Keys"),

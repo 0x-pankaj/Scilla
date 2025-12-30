@@ -43,6 +43,7 @@ fn prompt_cluster() -> anyhow::Result<ClusterCommand> {
             ClusterCommand::CurrentSlot,
             ClusterCommand::BlockHeight,
             ClusterCommand::BlockTime,
+            ClusterCommand::BlockTime,
             ClusterCommand::Validators,
             ClusterCommand::ClusterVersion,
             ClusterCommand::SupplyInfo,
@@ -81,7 +82,6 @@ fn prompt_account() -> anyhow::Result<AccountCommand> {
         vec![
             AccountCommand::FetchAccount,
             AccountCommand::Balance,
-            AccountCommand::Transfer,
             AccountCommand::Airdrop,
             AccountCommand::LargestAccounts,
             AccountCommand::NonceAccount,

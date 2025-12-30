@@ -22,7 +22,7 @@ use {
 pub enum AccountCommand {
     FetchAccount,
     Balance,
-    Transfer,
+
     Airdrop,
     LargestAccounts,
     NonceAccount,
@@ -34,7 +34,7 @@ impl AccountCommand {
         match self {
             AccountCommand::FetchAccount => "Fetching account…",
             AccountCommand::Balance => "Checking SOL balance…",
-            AccountCommand::Transfer => "Sending SOL…",
+
             AccountCommand::Airdrop => "Requesting SOL on devnet/testnet…",
             AccountCommand::LargestAccounts => "Fetching largest accounts on the cluster…",
             AccountCommand::NonceAccount => "Inspecting or managing durable nonces…",
@@ -48,7 +48,7 @@ impl fmt::Display for AccountCommand {
         let command = match self {
             AccountCommand::FetchAccount => "Fetch account",
             AccountCommand::Balance => "Check balance",
-            AccountCommand::Transfer => "Transfer SOL",
+
             AccountCommand::Airdrop => "Request airdrop",
             AccountCommand::LargestAccounts => "View largest accounts",
             AccountCommand::NonceAccount => "View nonce account",
@@ -69,9 +69,7 @@ impl AccountCommand {
                 let pubkey: Pubkey = prompt_data("Enter Pubkey :")?;
                 show_spinner(self.spinner_msg(), fetch_account_balance(ctx, &pubkey)).await?;
             }
-            AccountCommand::Transfer => {
-                // show_spinner(self.spinner_msg(), todo!()).await?;
-            }
+
             AccountCommand::Airdrop => {
                 show_spinner(self.spinner_msg(), request_sol_airdrop(ctx)).await?;
             }
@@ -116,8 +114,12 @@ async fn fetch_acc_data(ctx: &ScillaContext, pubkey: &Pubkey) -> anyhow::Result<
     table
         .load_preset(UTF8_FULL)
         .set_header(vec![
-            Cell::new("Field").add_attribute(comfy_table::Attribute::Bold),
-            Cell::new("Value").add_attribute(comfy_table::Attribute::Bold),
+            Cell::new("Field")
+                .add_attribute(comfy_table::Attribute::Bold)
+                .fg(comfy_table::Color::Cyan),
+            Cell::new("Value")
+                .add_attribute(comfy_table::Attribute::Bold)
+                .fg(comfy_table::Color::Cyan),
         ])
         .add_row(vec![
             Cell::new("Lamports"),
@@ -182,9 +184,15 @@ async fn fetch_largest_accounts(ctx: &ScillaContext) -> anyhow::Result<()> {
 
     let mut table = Table::new();
     table.load_preset(UTF8_FULL).set_header(vec![
-        Cell::new("#").add_attribute(comfy_table::Attribute::Bold),
-        Cell::new("Address").add_attribute(comfy_table::Attribute::Bold),
-        Cell::new("Balance (SOL)").add_attribute(comfy_table::Attribute::Bold),
+        Cell::new("#")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .fg(comfy_table::Color::Cyan),
+        Cell::new("Address")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .fg(comfy_table::Color::Cyan),
+        Cell::new("Balance (SOL)")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .fg(comfy_table::Color::Cyan),
     ]);
 
     for (idx, account) in largest_accounts.iter().enumerate() {
@@ -205,6 +213,12 @@ async fn fetch_largest_accounts(ctx: &ScillaContext) -> anyhow::Result<()> {
 async fn fetch_nonce_account(ctx: &ScillaContext, pubkey: &Pubkey) -> anyhow::Result<()> {
     let account = ctx.rpc().get_account(pubkey).await?;
 
+    if account.data.is_empty() {
+        bail!(
+            "Account has no data. It might be uninitialized or a system account, not a valid nonce account."
+        );
+    }
+
     let versions = bincode_deserialize::<Versions>(&account.data, "nonce account data")?;
 
     let solana_nonce::state::State::Initialized(data) = versions.state() else {
@@ -215,8 +229,12 @@ async fn fetch_nonce_account(ctx: &ScillaContext, pubkey: &Pubkey) -> anyhow::Re
     table
         .load_preset(UTF8_FULL)
         .set_header(vec![
-            Cell::new("Field").add_attribute(comfy_table::Attribute::Bold),
-            Cell::new("Value").add_attribute(comfy_table::Attribute::Bold),
+            Cell::new("Field")
+                .add_attribute(comfy_table::Attribute::Bold)
+                .fg(comfy_table::Color::Cyan),
+            Cell::new("Value")
+                .add_attribute(comfy_table::Attribute::Bold)
+                .fg(comfy_table::Color::Cyan),
         ])
         .add_row(vec![Cell::new("Address"), Cell::new(pubkey)])
         .add_row(vec![

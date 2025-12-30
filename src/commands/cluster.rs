@@ -91,6 +91,90 @@ impl ClusterCommand {
     }
 }
 
+// ... (existing functions) ...
+
+async fn fetch_validators(ctx: &ScillaContext) -> anyhow::Result<()> {
+    let validators = ctx.rpc().get_vote_accounts().await?;
+
+    // Summary table
+    let mut summary_table = Table::new();
+    summary_table
+        .load_preset(UTF8_FULL)
+        .set_header(vec![
+            Cell::new("Field")
+                .add_attribute(comfy_table::Attribute::Bold)
+                .fg(comfy_table::Color::Cyan),
+            Cell::new("Value")
+                .add_attribute(comfy_table::Attribute::Bold)
+                .fg(comfy_table::Color::Cyan),
+        ])
+        .add_row(vec![
+            Cell::new("Current Validators"),
+            Cell::new(format!("{}", validators.current.len())),
+        ])
+        .add_row(vec![
+            Cell::new("Delinquent Validators"),
+            Cell::new(format!("{}", validators.delinquent.len())),
+        ]);
+
+    println!("\n{}", style("VALIDATORS SUMMARY").green().bold());
+    println!("{summary_table}");
+
+    // Validators detail table
+    if !validators.current.is_empty() {
+        // Calculate total active stake for percentage calculation
+        let total_active_stake: u64 = validators
+            .current
+            .iter()
+            .chain(validators.delinquent.iter())
+            .map(|v| v.activated_stake)
+            .sum();
+
+        // Sort by active stake descending
+        let mut sorted_validators = validators.current.clone();
+        sorted_validators.sort_by(|a, b| b.activated_stake.cmp(&a.activated_stake));
+
+        let mut validators_table = Table::new();
+        validators_table.load_preset(UTF8_FULL).set_header(vec![
+            Cell::new("Rank")
+                .add_attribute(comfy_table::Attribute::Bold)
+                .fg(comfy_table::Color::Cyan),
+            Cell::new("Node Pubkey")
+                .add_attribute(comfy_table::Attribute::Bold)
+                .fg(comfy_table::Color::Cyan),
+            Cell::new("Vote Account")
+                .add_attribute(comfy_table::Attribute::Bold)
+                .fg(comfy_table::Color::Cyan),
+            Cell::new("Active Stake (SOL)")
+                .add_attribute(comfy_table::Attribute::Bold)
+                .fg(comfy_table::Color::Cyan),
+            Cell::new("Share %")
+                .add_attribute(comfy_table::Attribute::Bold)
+                .fg(comfy_table::Color::Cyan),
+        ]);
+
+        // Limit to top 50 to avoid overwhelming the terminal?
+
+        for (idx, validator) in sorted_validators.iter().enumerate() {
+            let stake_sol = (validator.activated_stake as f64).div(LAMPORTS_PER_SOL as f64);
+            let share_pct = (validator.activated_stake as f64 / total_active_stake as f64) * 100.0;
+
+            validators_table.add_row(vec![
+                Cell::new((idx + 1).to_string()),
+                Cell::new(validator.node_pubkey.clone()),
+                Cell::new(validator.vote_pubkey.clone()),
+                Cell::new(format!("{stake_sol:.2}")),
+                Cell::new(format!("{share_pct:.4}%")),
+            ]);
+        }
+
+        println!("\n{}", style("VALIDATORS (Sorted by Stake)").green().bold());
+        println!("{validators_table}");
+    }
+
+    Ok(())
+}
+
 async fn fetch_epoch_info(ctx: &ScillaContext) -> anyhow::Result<()> {
     let epoch_info = ctx.rpc().get_epoch_info().await?;
 
@@ -98,8 +182,12 @@ async fn fetch_epoch_info(ctx: &ScillaContext) -> anyhow::Result<()> {
     table
         .load_preset(UTF8_FULL)
         .set_header(vec![
-            Cell::new("Field").add_attribute(comfy_table::Attribute::Bold),
-            Cell::new("Value").add_attribute(comfy_table::Attribute::Bold),
+            Cell::new("Field")
+                .add_attribute(comfy_table::Attribute::Bold)
+                .fg(comfy_table::Color::Cyan),
+            Cell::new("Value")
+                .add_attribute(comfy_table::Attribute::Bold)
+                .fg(comfy_table::Color::Cyan),
         ])
         .add_row(vec![
             Cell::new("Epoch"),
@@ -139,8 +227,12 @@ async fn fetch_current_slot(ctx: &ScillaContext) -> anyhow::Result<()> {
     table
         .load_preset(UTF8_FULL)
         .set_header(vec![
-            Cell::new("Field").add_attribute(comfy_table::Attribute::Bold),
-            Cell::new("Value").add_attribute(comfy_table::Attribute::Bold),
+            Cell::new("Field")
+                .add_attribute(comfy_table::Attribute::Bold)
+                .fg(comfy_table::Color::Cyan),
+            Cell::new("Value")
+                .add_attribute(comfy_table::Attribute::Bold)
+                .fg(comfy_table::Color::Cyan),
         ])
         .add_row(vec![
             Cell::new("Current Slot"),
@@ -160,8 +252,12 @@ async fn fetch_block_height(ctx: &ScillaContext) -> anyhow::Result<()> {
     table
         .load_preset(UTF8_FULL)
         .set_header(vec![
-            Cell::new("Field").add_attribute(comfy_table::Attribute::Bold),
-            Cell::new("Value").add_attribute(comfy_table::Attribute::Bold),
+            Cell::new("Field")
+                .add_attribute(comfy_table::Attribute::Bold)
+                .fg(comfy_table::Color::Cyan),
+            Cell::new("Value")
+                .add_attribute(comfy_table::Attribute::Bold)
+                .fg(comfy_table::Color::Cyan),
         ])
         .add_row(vec![
             Cell::new("Block Height"),
@@ -186,8 +282,12 @@ async fn fetch_block_time(ctx: &ScillaContext) -> anyhow::Result<()> {
     table
         .load_preset(UTF8_FULL)
         .set_header(vec![
-            Cell::new("Field").add_attribute(comfy_table::Attribute::Bold),
-            Cell::new("Value").add_attribute(comfy_table::Attribute::Bold),
+            Cell::new("Field")
+                .add_attribute(comfy_table::Attribute::Bold)
+                .fg(comfy_table::Color::Cyan),
+            Cell::new("Value")
+                .add_attribute(comfy_table::Attribute::Bold)
+                .fg(comfy_table::Color::Cyan),
         ])
         .add_row(vec![Cell::new("Slot"), Cell::new(format!("{slot}"))])
         .add_row(vec![
@@ -198,56 +298,6 @@ async fn fetch_block_time(ctx: &ScillaContext) -> anyhow::Result<()> {
 
     println!("\n{}", style("BLOCK TIME").green().bold());
     println!("{table}");
-
-    Ok(())
-}
-
-async fn fetch_validators(ctx: &ScillaContext) -> anyhow::Result<()> {
-    let validators = ctx.rpc().get_vote_accounts().await?;
-
-    // Summary table
-    let mut summary_table = Table::new();
-    summary_table
-        .load_preset(UTF8_FULL)
-        .set_header(vec![
-            Cell::new("Field").add_attribute(comfy_table::Attribute::Bold),
-            Cell::new("Value").add_attribute(comfy_table::Attribute::Bold),
-        ])
-        .add_row(vec![
-            Cell::new("Current Validators"),
-            Cell::new(format!("{}", validators.current.len())),
-        ])
-        .add_row(vec![
-            Cell::new("Delinquent Validators"),
-            Cell::new(format!("{}", validators.delinquent.len())),
-        ]);
-
-    println!("\n{}", style("VALIDATORS SUMMARY").green().bold());
-    println!("{summary_table}");
-
-    // Validators detail table
-    if !validators.current.is_empty() {
-        let mut validators_table = Table::new();
-        validators_table.load_preset(UTF8_FULL).set_header(vec![
-            Cell::new("#").add_attribute(comfy_table::Attribute::Bold),
-            Cell::new("Node Pubkey").add_attribute(comfy_table::Attribute::Bold),
-            Cell::new("Vote Account").add_attribute(comfy_table::Attribute::Bold),
-            Cell::new("Activated Stake (SOL)").add_attribute(comfy_table::Attribute::Bold),
-        ]);
-
-        for (idx, validator) in validators.current.iter().enumerate() {
-            let stake_sol = (validator.activated_stake as f64).div(LAMPORTS_PER_SOL as f64);
-            validators_table.add_row(vec![
-                Cell::new(format!("{}", idx + 1)),
-                Cell::new(&validator.node_pubkey),
-                Cell::new(&validator.vote_pubkey),
-                Cell::new(format!("{stake_sol:.2}")),
-            ]);
-        }
-
-        println!("\n{}", style("TOP VALIDATORS").green().bold());
-        println!("{validators_table}");
-    }
 
     Ok(())
 }
@@ -264,9 +314,15 @@ async fn fetch_supply_info(ctx: &ScillaContext) -> anyhow::Result<()> {
     table
         .load_preset(UTF8_FULL)
         .set_header(vec![
-            Cell::new("Field").add_attribute(comfy_table::Attribute::Bold),
-            Cell::new("Value (SOL)").add_attribute(comfy_table::Attribute::Bold),
-            Cell::new("Percentage").add_attribute(comfy_table::Attribute::Bold),
+            Cell::new("Field")
+                .add_attribute(comfy_table::Attribute::Bold)
+                .fg(comfy_table::Color::Cyan),
+            Cell::new("Value (SOL)")
+                .add_attribute(comfy_table::Attribute::Bold)
+                .fg(comfy_table::Color::Cyan),
+            Cell::new("Percentage")
+                .add_attribute(comfy_table::Attribute::Bold)
+                .fg(comfy_table::Color::Cyan),
         ])
         .add_row(vec![
             Cell::new("Total Supply"),
@@ -296,8 +352,12 @@ async fn fetch_inflation_info(ctx: &ScillaContext) -> anyhow::Result<()> {
     table
         .load_preset(UTF8_FULL)
         .set_header(vec![
-            Cell::new("Field").add_attribute(comfy_table::Attribute::Bold),
-            Cell::new("Value").add_attribute(comfy_table::Attribute::Bold),
+            Cell::new("Field")
+                .add_attribute(comfy_table::Attribute::Bold)
+                .fg(comfy_table::Color::Cyan),
+            Cell::new("Value")
+                .add_attribute(comfy_table::Attribute::Bold)
+                .fg(comfy_table::Color::Cyan),
         ])
         .add_row(vec![
             Cell::new("Epoch"),
@@ -329,8 +389,12 @@ async fn fetch_cluster_version(ctx: &ScillaContext) -> anyhow::Result<()> {
     table
         .load_preset(UTF8_FULL)
         .set_header(vec![
-            Cell::new("Field").add_attribute(comfy_table::Attribute::Bold),
-            Cell::new("Value").add_attribute(comfy_table::Attribute::Bold),
+            Cell::new("Field")
+                .add_attribute(comfy_table::Attribute::Bold)
+                .fg(comfy_table::Color::Cyan),
+            Cell::new("Value")
+                .add_attribute(comfy_table::Attribute::Bold)
+                .fg(comfy_table::Color::Cyan),
         ])
         .add_row(vec![
             Cell::new("Solana Core"),
